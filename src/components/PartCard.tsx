@@ -1,0 +1,101 @@
+import { useNavigate } from 'react-router-dom';
+import type { Part } from '@/types';
+import { PartThumb, StockBadge, QualityBadge, ConfidenceMeter } from './ui';
+import { IconArrowRight, IconPlus, IconTag, IconCheck } from './icons';
+import { brandById } from '@/data/brands';
+import { bestPrice } from '@/services/inventory';
+import { bestOffer } from '@/services/suppliers';
+import { aud } from '@/lib/format';
+import { useAppStore } from '@/store/AppStore';
+
+function tierOf(part: Part) {
+  const t = part.specs.Tier ?? '';
+  if (t.includes('OEM')) return 'oem' as const;
+  if (t.includes('Premium')) return 'premium' as const;
+  if (t.includes('Budget')) return 'budget' as const;
+  return 'standard' as const;
+}
+
+export function PartCard({
+  part,
+  score,
+  reasons,
+  onRequestQuote,
+  highlight = false,
+}: {
+  part: Part;
+  score?: number;
+  reasons?: string[];
+  onRequestQuote?: (part: Part) => void;
+  highlight?: boolean;
+}) {
+  const navigate = useNavigate();
+  const { addToQuote } = useAppStore();
+  const brand = brandById(part.brandId);
+  const price = bestPrice(part);
+  const offer = bestOffer(part);
+  const shortName = part.name.split(' — ')[0];
+
+  return (
+    <div
+      className={`card card-hover flex flex-col p-4 ${highlight ? 'ring-1 ring-iq-500/40 shadow-glow' : ''}`}
+    >
+      <div className="flex gap-3">
+        <PartThumb part={part} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start gap-2">
+            <button
+              onClick={() => navigate(`/part/${part.id}`)}
+              className="min-w-0 flex-1 text-left"
+            >
+              <div className="truncate text-sm font-bold text-ink-50 hover:text-iq-300">{shortName}</div>
+            </button>
+            {score != null && <ConfidenceMeter value={score} size="sm" />}
+          </div>
+          <div className="mt-0.5 truncate text-xs text-ink-400">
+            {brand?.name} · {part.category}
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <QualityBadge tier={tierOf(part)} />
+            <span className="font-mono text-[11px] text-ink-400">{part.partNumber}</span>
+          </div>
+        </div>
+      </div>
+
+      {reasons && reasons.length > 0 && (
+        <ul className="mt-3 space-y-1">
+          {reasons.slice(0, 3).map((r, i) => (
+            <li key={i} className="flex items-center gap-1.5 text-[11px] text-ink-300">
+              <IconCheck width={12} height={12} className="text-signal-green" />
+              {r}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="mt-auto pt-3">
+        <div className="flex items-end justify-between">
+          <div>
+            <div className="text-lg font-extrabold text-ink-50">{aud(price)}</div>
+            {offer && <div className="text-[11px] text-ink-400">{offer.supplier.name}</div>}
+          </div>
+          <StockBadge part={part} />
+        </div>
+
+        <div className="mt-3 flex gap-2">
+          <button onClick={() => navigate(`/part/${part.id}`)} className="btn-subtle flex-1 px-3 py-2 text-xs">
+            View Part <IconArrowRight width={14} height={14} />
+          </button>
+          <button onClick={() => addToQuote(part.id)} className="btn-ghost px-3 py-2 text-xs" title="Add to quote">
+            <IconPlus width={14} height={14} />
+          </button>
+          {onRequestQuote && (
+            <button onClick={() => onRequestQuote(part)} className="btn-ghost px-3 py-2 text-xs" title="Request quote">
+              <IconTag width={14} height={14} />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
