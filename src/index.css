@@ -14,37 +14,46 @@ body,
 
 body {
   margin: 0;
-  background-color: #0a0b0d;
-  color: #e7eaee;
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background-color: #0a0908;
+  color: #e7e1d5;
+  font-family: 'Barlow', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-feature-settings: 'ss01';
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
+/* Headings adopt the condensed technical display face — workshop signage feel. */
+h1,
+h2,
+h3 {
+  font-family: 'Barlow Semi Condensed', 'Barlow', system-ui, sans-serif;
+  letter-spacing: -0.005em;
+}
+
 ::selection {
-  background: rgba(249, 115, 22, 0.35);
+  background: rgba(207, 115, 32, 0.35);
 }
 
 /* Thin industrial scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #323945 transparent;
+  scrollbar-color: #3a352f transparent;
 }
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #323945;
+  background: #3a352f;
   border-radius: 8px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #48505e;
+  background: #514b43;
 }
 
 @layer components {
   .card {
-    @apply rounded-xl border border-ink-700/70 bg-ink-850/80 shadow-card;
+    @apply rounded-xl border border-ink-700 bg-ink-850 shadow-card;
   }
   .card-hover {
     @apply transition-colors hover:border-iq-600/50 hover:bg-ink-800;
@@ -68,7 +77,50 @@ body {
     @apply w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-sm text-ink-50 placeholder:text-ink-500 outline-none transition focus:border-iq-500/70 focus:ring-2 focus:ring-iq-500/20;
   }
   .label {
-    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400;
+    @apply mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-ink-400;
+  }
+  .kicker {
+    @apply text-[11px] font-bold uppercase tracking-[0.18em] text-iq-500;
+  }
+  /* Big numeric readouts use the condensed face with tabular figures. */
+  .stat-num {
+    font-family: 'Barlow Semi Condensed', 'Barlow', sans-serif;
+    font-variant-numeric: tabular-nums;
   }
 }
 
+@layer utilities {
+  .font-display {
+    font-family: 'Barlow Semi Condensed', 'Barlow', system-ui, sans-serif;
+  }
+
+  /* Subtle topographic contour lines — evokes terrain maps without imagery. */
+  .bg-topo {
+    background-image:
+      repeating-radial-gradient(
+        circle at 18% 120%,
+        rgba(207, 115, 32, 0.05) 0,
+        rgba(207, 115, 32, 0.05) 1px,
+        transparent 1px,
+        transparent 34px
+      ),
+      repeating-radial-gradient(
+        circle at 88% -10%,
+        rgba(155, 157, 104, 0.05) 0,
+        rgba(155, 157, 104, 0.05) 1px,
+        transparent 1px,
+        transparent 40px
+      );
+  }
+
+  /* Fine diagonal hatch — a restrained nod to tyre tread / knurled metal. */
+  .bg-tread {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.035) 0,
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+  }
+}

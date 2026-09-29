@@ -5,7 +5,7 @@ import { search } from '@/services/partsSearch';
 import { useAppStore } from '@/store/AppStore';
 import { PartCard } from '@/components/PartCard';
 import { RfqModal } from '@/components/RfqModal';
-import { Card, ConfidenceMeter, PartThumb, StockBadge, QualityBadge, EmptyState } from '@/components/ui';
+import { Card, ConfidenceMeter, PartThumb, StockBadge, QualityBadge, FitmentBadge, EmptyState } from '@/components/ui';
 import {
   IconSpark,
   IconCheck,
@@ -199,7 +199,7 @@ function InterpretationPanel({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <IconSpark width={15} height={15} className="text-iq-400" />
-            <span className="text-xs font-bold uppercase tracking-widest text-ink-400">Interpreted as</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-ink-400">Parts Intelligence read this as</span>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
             <Field label="Vehicle" value={i.detectedVehicleLabel} />
@@ -282,13 +282,27 @@ function BestMatch({ result, onRequestQuote }: { result: SearchResult; onRequest
     <Card className="overflow-hidden p-0 shadow-glow ring-1 ring-iq-500/40">
       <div className="flex items-center gap-2 border-b border-ink-700 bg-iq-500/10 px-5 py-2.5">
         <IconSpark width={15} height={15} className="text-iq-400" />
-        <span className="text-xs font-bold uppercase tracking-widest text-iq-300">Best match</span>
-        <span className="ml-auto text-xs text-ink-300">AI match {Math.round(best.score * 100)}%</span>
+        <span className="font-display text-sm font-bold uppercase tracking-widest text-iq-300">Best match</span>
+        <span className="stat-num ml-auto text-xs text-ink-300">PARTS IQ match {Math.round(best.score * 100)}%</span>
+      </div>
+      {/* Fitment verdict banner — one of the strongest signals on the page */}
+      <div className="flex flex-wrap items-center gap-3 border-b border-ink-800 bg-ink-900/60 px-5 py-3">
+        <FitmentBadge score={best.score} />
+        {result.interpretation.detectedVehicleLabel && (
+          <span className="font-display text-sm font-bold uppercase tracking-wide text-ink-100">
+            {result.interpretation.detectedVehicleLabel}
+            {result.interpretation.year ? ` · ${result.interpretation.year}` : ''}
+            {result.interpretation.engine ? ` · ${result.interpretation.engine}` : ''}
+          </span>
+        )}
+        {result.interpretation.position && result.interpretation.position !== 'n/a' && (
+          <span className="pill uppercase">{result.interpretation.position}</span>
+        )}
       </div>
       <div className="grid gap-5 p-5 md:grid-cols-[auto,1fr,auto]">
         <PartThumb part={part} size="lg" />
         <div className="min-w-0">
-          <Link to={`/part/${part.id}`} className="text-lg font-bold text-ink-50 hover:text-iq-300">
+          <Link to={`/part/${part.id}`} className="font-display text-xl font-bold uppercase tracking-wide text-ink-50 hover:text-iq-300">
             {part.name.split(' — ')[0]}
           </Link>
           <div className="mt-0.5 text-sm text-ink-400">{part.name.split(' — ')[1]}</div>
@@ -298,7 +312,7 @@ function BestMatch({ result, onRequestQuote }: { result: SearchResult; onRequest
             <span className="text-xs text-ink-500">OEM {part.oemNumber}</span>
           </div>
           <div className="mt-3">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Compatibility</div>
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Fits vehicles</div>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {fitments.map((f) => {
                 const v = vehicleById(f.vehicleId);

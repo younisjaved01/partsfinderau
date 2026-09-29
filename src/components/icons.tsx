@@ -14,12 +14,13 @@ const base = (p: P) => ({
   ...p,
 });
 
-// --- Brand logo: a stylised gear/aperture "IQ" mark -----------------------
+// --- Brand logo: a hex-nut framing a topographic summit ("IQ" terrain) -----
 export function LogoMark(p: P) {
   return (
-    <svg {...base({ ...p, strokeWidth: 1.5 })}>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1" />
+    <svg {...base({ ...p, strokeWidth: 1.6 })}>
+      <path d="M12 2.5l8 4.6v9.8l-8 4.6-8-4.6V7.1l8-4.6z" />
+      <path d="M6.5 15.5l3-4 2.2 2.6 2-3.2 3.8 4.6" />
+      <circle cx="9.4" cy="9" r="0.7" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -95,6 +96,21 @@ export const IconArrowRight = (p: P) => (
 );
 export const IconLayers = (p: P) => (
   <svg {...base(p)}><path d="M12 3l9 5-9 5-9-5 9-5z" /><path d="M3 13l9 5 9-5" /></svg>
+);
+export const IconWrench = (p: P) => (
+  <svg {...base(p)}><path d="M14.5 5.5a4 4 0 00-5.2 5.2L4 16v4h4l5.3-5.3a4 4 0 005.2-5.2l-2.6 2.6-2.3-.6-.6-2.3 2.5-2.5z" /></svg>
+);
+export const IconWheel = (p: P) => (
+  <svg {...base(p)}><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="3" /><path d="M12 3.5v5M12 15.5v5M3.5 12h5M15.5 12h5" /></svg>
+);
+export const IconTopo = (p: P) => (
+  <svg {...base(p)}><path d="M3 17c3-4 6-4 9 0M6 13c3-4 6-4 9 0M9 9c2-2 4-2 6 0" /></svg>
+);
+export const IconShield = (p: P) => (
+  <svg {...base(p)}><path d="M12 3l7 2.5v5c0 5-3.2 8.2-7 10-3.8-1.8-7-5-7-10v-5L12 3z" /><path d="M9 12l2 2 4-4" /></svg>
+);
+export const IconBolt = (p: P) => (
+  <svg {...base(p)}><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z" /></svg>
 );
 
 // --- Category icons -------------------------------------------------------

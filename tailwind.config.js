@@ -4,49 +4,70 @@ export default {
   theme: {
     extend: {
       colors: {
-        // PARTS IQ brand identity — industrial charcoal + molten orange
+        // PARTS IQ — rugged Australian 4WD identity.
+        // Charcoal / near-black surfaces, muted sand text, olive/khaki + burnt
+        // amber accents. Neutral, technical, trustworthy — no neon.
         ink: {
-          50: '#eef1f4',
-          100: '#d3d8df',
-          200: '#b4bcc7',
-          300: '#949fad',
-          400: '#6f7b8b',
-          500: '#55606f',
-          600: '#323945',
-          700: '#252b34',
-          750: '#1e232b',
-          800: '#181c22',
-          850: '#14171c',
-          900: '#0f1115',
-          950: '#0a0b0d',
+          50: '#f2efe9',
+          100: '#ddd8cf',
+          200: '#bcb6ab',
+          300: '#948d81',
+          400: '#6e675d',
+          500: '#514b43',
+          600: '#3a352f',
+          700: '#2b2823',
+          750: '#221f1b',
+          800: '#1b1915',
+          850: '#151310',
+          900: '#100e0c',
+          950: '#0a0908',
         },
+        // Muted sand — warm neutral for secondary surfaces / text.
+        sand: {
+          50: '#f8f4ec',
+          100: '#efe7d7',
+          200: '#e0d3ba',
+          300: '#ccb992',
+          400: '#b39c6f',
+          500: '#98805a',
+          600: '#7a6647',
+        },
+        // Olive / khaki — field accent for tags, systems, secondary emphasis.
+        field: {
+          300: '#b9bb8f',
+          400: '#9b9d68',
+          500: '#7d7f4c',
+          600: '#63653b',
+          700: '#4b4c2d',
+        },
+        // Burnt amber — reserved for important actions & the brand mark.
         iq: {
-          // molten orange accent
-          50: '#fff4ed',
-          100: '#ffe6d5',
-          200: '#feccaa',
-          300: '#fdac74',
-          400: '#fb8a3c',
-          500: '#f97316',
-          600: '#ea5a0b',
-          700: '#c2410c',
-          800: '#9a3412',
-          900: '#7c2d12',
+          50: '#fdf6ec',
+          100: '#f9e7cc',
+          200: '#f1cb96',
+          300: '#e8ab60',
+          400: '#de8f39',
+          500: '#cf7320',
+          600: '#b65b16',
+          700: '#934515',
+          800: '#763918',
+          900: '#623016',
         },
         signal: {
-          green: '#34d399',
-          amber: '#fbbf24',
-          red: '#f87171',
-          blue: '#60a5fa',
+          green: '#5fae74',
+          amber: '#e0a92e',
+          red: '#d9683f',
+          blue: '#5b93b8',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        sans: ['Barlow', 'Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        display: ['"Barlow Semi Condensed"', 'Barlow', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       boxShadow: {
-        card: '0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 24px -12px rgba(0,0,0,0.6)',
-        glow: '0 0 0 1px rgba(249,115,22,0.35), 0 8px 32px -8px rgba(249,115,22,0.35)',
+        card: '0 1px 0 0 rgba(255,255,255,0.03) inset, 0 10px 28px -14px rgba(0,0,0,0.7)',
+        glow: '0 0 0 1px rgba(207,115,32,0.35), 0 10px 34px -10px rgba(207,115,32,0.32)',
       },
       backgroundImage: {
         'grid-faint':
@@ -57,7 +78,7 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(4px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
-        'scan': {
+        scan: {
           '0%': { transform: 'translateY(0)' },
           '100%': { transform: 'translateY(100%)' },
         },
@@ -68,7 +89,7 @@ export default {
       },
       animation: {
         'fade-in': 'fade-in 0.3s ease-out both',
-        'scan': 'scan 1.4s ease-in-out infinite alternate',
+        scan: 'scan 1.4s ease-in-out infinite alternate',
         'pulse-ring': 'pulse-ring 1.6s ease-out infinite',
       },
     },

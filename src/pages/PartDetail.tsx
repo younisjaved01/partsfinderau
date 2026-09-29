@@ -60,8 +60,21 @@ export function PartDetail() {
             <QualityBadge tier={tierOf(part)} />
             <span className="pill">{part.category}</span>
           </div>
-          <h1 className="mt-2 text-xl font-bold text-ink-50">{part.name.split(' — ')[0]}</h1>
+          <h1 className="mt-2 text-2xl font-bold uppercase tracking-wide text-ink-50">{part.name.split(' — ')[0]}</h1>
           <div className="text-sm text-ink-400">{part.name.split(' — ')[1]}</div>
+          {/* 4WD attribute chips — only fields the data actually supports */}
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {part.position !== 'n/a' && (
+              <span className="pill border-iq-500/30 bg-iq-500/5 uppercase text-iq-200">
+                {part.position === 'front-rear' ? 'Front & Rear' : part.position}
+              </span>
+            )}
+            {part.side !== 'n/a' && (
+              <span className="pill uppercase">{part.side === 'left-right' ? 'Left & Right' : part.side}</span>
+            )}
+            {part.engine && <span className="pill">{part.engine}</span>}
+            <span className="pill">Fits {part.yearFrom}–{part.yearTo}</span>
+          </div>
           <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm sm:grid-cols-3">
             <Meta label="Part number" value={part.partNumber} mono />
             <Meta label="OEM number" value={part.oemNumber} mono />
@@ -305,9 +318,9 @@ function FitmentChecker({ part }: { part: Part }) {
   const check = q.make && q.model ? checkFitment(part, q) : null;
   const style =
     check?.verdict === 'fits'
-      ? { cls: 'border-signal-green/40 bg-signal-green/5 text-signal-green', Icon: IconCheck, label: 'Compatible' }
+      ? { cls: 'border-signal-green/40 bg-signal-green/5 text-signal-green', Icon: IconCheck, label: 'Confirmed fitment' }
       : check?.verdict === 'possible'
-        ? { cls: 'border-signal-amber/40 bg-signal-amber/5 text-signal-amber', Icon: IconWarn, label: 'Possible mismatch' }
+        ? { cls: 'border-signal-amber/40 bg-signal-amber/5 text-signal-amber', Icon: IconWarn, label: 'Verify fitment' }
         : check?.verdict === 'no-fit'
           ? { cls: 'border-signal-red/40 bg-signal-red/5 text-signal-red', Icon: IconX, label: 'Does not fit' }
           : null;

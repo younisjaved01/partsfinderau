@@ -14,11 +14,14 @@ import {
   IconSettings,
   IconMenu,
   IconX,
-  IconSpark,
+  IconCar,
+  IconShield,
+  IconArrowRight,
 } from './icons';
 import { useAppStore } from '@/store/AppStore';
 import { isDemoMode } from '@/services/integrations';
 import { catalogueSize } from '@/data/parts';
+import { vehicles } from '@/data/vehicles';
 
 interface NavEntry {
   to: string;
@@ -35,19 +38,50 @@ export function Layout() {
 
   const activeRfqs = state.rfqs.filter((r) => r.status === 'open' || r.status === 'partial').length;
 
-  const nav: NavEntry[] = [
+  // Primary workflow: Vehicle → System → Part → Fitment → Supplier → Sourcing.
+  const primary: NavEntry[] = [
     { to: '/dashboard', label: 'Dashboard', icon: IconGauge },
-    { to: '/', label: 'Find Parts', icon: IconSearch, end: true },
-    { to: '/parts', label: 'Parts', icon: IconGrid },
-    { to: '/inventory', label: 'Inventory', icon: IconBox },
+    { to: '/vehicles', label: 'Vehicles', icon: IconCar },
+    { to: '/parts', label: 'Parts Catalogue', icon: IconGrid },
     { to: '/suppliers', label: 'Suppliers', icon: IconStore },
     { to: '/rfqs', label: 'RFQs', icon: IconDoc, badge: () => activeRfqs },
     { to: '/quotes', label: 'Quotes', icon: IconTag, badge: () => quoteCount },
     { to: '/orders', label: 'Orders', icon: IconTruck },
+    { to: '/inventory', label: 'Inventory', icon: IconBox },
+  ];
+  const secondary: NavEntry[] = [
     { to: '/history', label: 'Search History', icon: IconClock },
-    { to: '/supplier-portal', label: 'Supplier Portal', icon: IconStore },
+    { to: '/supplier-portal', label: 'Supplier Portal', icon: IconShield },
     { to: '/settings', label: 'Settings', icon: IconSettings },
   ];
+
+  const navItem = (n: NavEntry) => {
+    const Icon = n.icon;
+    const count = n.badge?.() ?? 0;
+    return (
+      <NavLink
+        key={n.to}
+        to={n.to}
+        end={n.end}
+        onClick={() => setOpen(false)}
+        className={({ isActive }) =>
+          `group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+            isActive
+              ? 'bg-iq-500/10 text-iq-300 ring-1 ring-inset ring-iq-500/30'
+              : 'text-ink-300 hover:bg-ink-800 hover:text-ink-50'
+          }`
+        }
+      >
+        <Icon width={18} height={18} />
+        <span>{n.label}</span>
+        {count > 0 && (
+          <span className="stat-num ml-auto rounded-full bg-iq-500 px-2 py-0.5 text-[10px] font-bold text-ink-950">
+            {count}
+          </span>
+        )}
+      </NavLink>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-ink-950 text-ink-100">
@@ -57,59 +91,64 @@ export function Layout() {
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center gap-2.5 px-5 py-5">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-iq-500 text-ink-950">
-            <LogoMark width={22} height={22} />
+        {/* Brand */}
+        <div className="flex items-center gap-2.5 border-b border-ink-800 px-5 py-4">
+          <div className="grid h-10 w-10 place-items-center rounded-lg bg-iq-500 text-ink-950 shadow-glow">
+            <LogoMark width={24} height={24} />
           </div>
-          <div className="leading-tight">
-            <div className="text-sm font-extrabold tracking-tight text-ink-50">
-              PARTS<span className="text-iq-400"> IQ</span>
+          <div className="leading-none">
+            <div className="font-display text-xl font-extrabold uppercase tracking-wide text-ink-50">
+              Parts<span className="text-iq-400">IQ</span>
             </div>
-            <div className="text-[10px] text-ink-400">Find any part. From any clue.</div>
+            <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+              4WD Parts Intelligence
+            </div>
           </div>
           <button className="ml-auto text-ink-400 lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu">
             <IconX />
           </button>
         </div>
 
-        <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-2">
-          {nav.map((n) => {
-            const Icon = n.icon;
-            const count = n.badge?.() ?? 0;
-            return (
-              <NavLink
-                key={n.to}
-                to={n.to}
-                end={n.end}
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-iq-500/10 text-iq-300 ring-1 ring-inset ring-iq-500/30'
-                      : 'text-ink-300 hover:bg-ink-800 hover:text-ink-50'
-                  }`
-                }
-              >
-                <Icon width={18} height={18} />
-                <span>{n.label}</span>
-                {count > 0 && (
-                  <span className="ml-auto rounded-full bg-iq-500 px-2 py-0.5 text-[10px] font-bold text-ink-950">
-                    {count}
-                  </span>
-                )}
-              </NavLink>
-            );
-          })}
+        {/* Dominant Find Parts action */}
+        <div className="px-3 pt-3">
+          <NavLink
+            to="/"
+            end
+            onClick={() => setOpen(false)}
+            className={({ isActive }) =>
+              `group relative flex items-center gap-3 overflow-hidden rounded-xl px-4 py-3.5 font-display text-base font-bold uppercase tracking-wide transition ${
+                isActive
+                  ? 'bg-iq-500 text-ink-950'
+                  : 'bg-iq-500/15 text-iq-200 ring-1 ring-inset ring-iq-500/40 hover:bg-iq-500/25'
+              }`
+            }
+          >
+            <span className="absolute inset-0 bg-tread opacity-30" />
+            <IconSearch width={20} height={20} className="relative" />
+            <span className="relative">Find Parts</span>
+            <IconArrowRight width={18} height={18} className="relative ml-auto opacity-70 transition-transform group-hover:translate-x-0.5" />
+          </NavLink>
+        </div>
+
+        <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-3">
+          {primary.map(navItem)}
+          <div className="my-2 flex items-center gap-2 px-3">
+            <div className="h-px flex-1 bg-ink-800" />
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-ink-500">More</span>
+            <div className="h-px flex-1 bg-ink-800" />
+          </div>
+          {secondary.map(navItem)}
         </nav>
 
         <div className="border-t border-ink-800 p-3">
-          <div className="rounded-lg bg-ink-850 p-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-ink-200">
-              <IconSpark width={14} height={14} className="text-iq-400" />
-              Catalogue
+          <div className="relative overflow-hidden rounded-lg border border-ink-700 bg-ink-850 p-3">
+            <div className="absolute inset-0 bg-topo opacity-70" />
+            <div className="relative flex items-center gap-2 text-xs font-semibold text-ink-200">
+              <LogoMark width={14} height={14} className="text-iq-400" />
+              4WD Catalogue
             </div>
-            <div className="mt-1 text-[11px] text-ink-400">
-              {catalogueSize} parts · 12 vehicles · 5 suppliers
+            <div className="stat-num relative mt-1 text-[11px] text-ink-400">
+              {catalogueSize.toLocaleString()} parts · {vehicles.length} vehicles · 5 suppliers
             </div>
           </div>
         </div>
@@ -133,7 +172,7 @@ export function Layout() {
           <div className="ml-auto flex items-center gap-2">
             {isDemoMode() && (
               <span className="pill border-iq-500/40 bg-iq-500/10 text-iq-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-iq-400 animate-pulse" />
+                <span className="h-1.5 w-1.5 rounded-full bg-iq-400" />
                 Demo Mode
               </span>
             )}
@@ -144,7 +183,7 @@ export function Layout() {
             >
               <IconTag width={18} height={18} />
               {quoteCount > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-iq-500 px-1 text-[10px] font-bold text-ink-950">
+                <span className="stat-num absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-iq-500 px-1 text-[10px] font-bold text-ink-950">
                   {quoteCount}
                 </span>
               )}
