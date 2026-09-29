@@ -39,8 +39,8 @@ export function Home() {
   return (
     <div className="space-y-7">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-2xl border border-ink-800 bg-gradient-to-br from-ink-900 via-ink-900 to-ink-850 px-5 py-8 sm:px-8 sm:py-9">
-        <div className="absolute inset-0 bg-topo opacity-80" />
+      <section className="relative overflow-hidden rounded-2xl border border-ink-800 bg-gradient-to-br from-ink-900/70 via-ink-900/55 to-ink-850/55 px-5 py-8 backdrop-blur-sm sm:px-8 sm:py-9">
+        <div className="absolute inset-0 bg-topo opacity-60" />
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-iq-500/10 blur-3xl" />
         <div className="relative max-w-3xl">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-iq-500/30 bg-iq-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-iq-300">

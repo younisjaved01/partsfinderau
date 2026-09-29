@@ -123,4 +123,26 @@ h3 {
       transparent 7px
     );
   }
+
+  /* Layer 1 of the animated background: a very slow gradient drift (GPU
+     transform only). Paused for reduced-motion users. */
+  .animate-drift {
+    animation: iq-drift 46s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+}
+
+@keyframes iq-drift {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(1.5%, 1%, 0) scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift {
+    animation: none;
+  }
 }

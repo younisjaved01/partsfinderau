@@ -173,8 +173,12 @@ export function SearchConsole({
       vehicle: Object.keys(vehicle).length ? vehicle : undefined,
     };
     if (!(input.text || input.partNumber || input.image || input.voiceTranscript || input.vehicle)) return;
+    // Let the animated backdrop react briefly to the search.
+    window.dispatchEvent(new CustomEvent('partsiq:pulse'));
     navigate('/search', { state: { input } });
   };
+
+  const pulseBackground = () => window.dispatchEvent(new CustomEvent('partsiq:pulse'));
 
   return (
     <div className={`card overflow-hidden ${variant === 'hero' ? 'p-4 sm:p-5' : 'p-4'}`}>
@@ -234,6 +238,7 @@ export function SearchConsole({
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
+              onFocus={pulseBackground}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();

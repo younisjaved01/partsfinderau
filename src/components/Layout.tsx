@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { FourWDBackground } from './ui/FourWDBackground';
 import {
   LogoMark,
   IconGauge,
@@ -35,6 +36,9 @@ export function Layout() {
   const [open, setOpen] = useState(false);
   const { quoteCount, state } = useAppStore();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  // Strongest motion on the Find Parts hero; subtle everywhere else.
+  const bgIntensity = pathname === '/' ? 'hero' : 'ambient';
 
   const activeRfqs = state.rfqs.filter((r) => r.status === 'open' || r.status === 'partial').length;
 
@@ -84,7 +88,10 @@ export function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-ink-950 text-ink-100">
+    <div className="relative min-h-screen text-ink-100">
+      {/* Signature animated 4WD backdrop — sits behind all content */}
+      <FourWDBackground className="fixed inset-0 z-0" intensity={bgIntensity} />
+
       {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-ink-800 bg-ink-900/95 backdrop-blur transition-transform lg:translate-x-0 ${
@@ -157,7 +164,7 @@ export function Layout() {
       {open && <div className="fixed inset-0 z-30 bg-black/60 lg:hidden" onClick={() => setOpen(false)} />}
 
       {/* Main column */}
-      <div className="lg:pl-64">
+      <div className="relative z-10 lg:pl-64">
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-ink-800 bg-ink-950/85 px-4 py-3 backdrop-blur">
           <button className="text-ink-300 lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
             <IconMenu />
