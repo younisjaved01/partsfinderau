@@ -88,7 +88,7 @@ export function Home() {
           {categories.map((c) => (
             <button
               key={c}
-              onClick={() => navigate(`/parts?category=${c}`)}
+              onClick={() => navigate(`/catalogue?category=${c}`)}
               className="card card-hover flex flex-col items-center gap-2 p-3 text-center"
             >
               <CategoryIcon category={c} width={24} height={24} className="text-iq-400" />

@@ -21,6 +21,8 @@ export interface Vehicle {
   make: string;
   model: string;
   series?: string;
+  /** Manufacturer chassis / body code (e.g. Hilux GUN126), when known. */
+  chassis?: string;
   yearFrom: number;
   yearTo: number;
   engines: string[];

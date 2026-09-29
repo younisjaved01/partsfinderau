@@ -9,7 +9,7 @@
  * NONE of these are implemented yet — they are the contract, on purpose.
  */
 
-import type { Interpretation, SearchInput } from '@/types';
+import type { Interpretation, SearchInput, VehicleQuery } from '@/types';
 
 // --- LLM / reasoning provider (OpenAI, Claude, Gemini, ...) ---------------
 export interface LlmProvider {
@@ -65,6 +65,45 @@ export interface VinProvider {
   decode(vinOrRego: string): Promise<{ make: string; model: string; year: number; engine?: string }>;
 }
 
+// --- Registration (rego) → vehicle ----------------------------------------
+export interface RegoResult {
+  rego: string;
+  state?: string;
+  vehicle: VehicleQuery;
+  /** Catalogue vehicle id, when the rego resolves to a known vehicle. */
+  matchedVehicleId?: string;
+  label: string;
+}
+export interface RegistrationProvider {
+  name: string;
+  lookup(rego: string, state?: string): Promise<RegoResult | null>;
+}
+
+// --- Partsouq-style external catalogue ------------------------------------
+export interface PartsouqRef {
+  partNumber: string;
+  description: string;
+  brand?: string;
+  vehicleCompatibility: string[];
+  source: 'Partsouq';
+}
+export interface PartsouqImage {
+  available: boolean;
+  url?: string;
+  note?: string;
+}
+export interface PartsouqDetails extends PartsouqRef {
+  oem?: string[];
+  specs?: Record<string, string>;
+}
+export interface PartsouqProvider {
+  name: string;
+  searchParts(query: { partNumber?: string; text?: string; vehicle?: VehicleQuery }): Promise<PartsouqRef[]>;
+  getPart(partNumber: string): Promise<PartsouqRef | null>;
+  getPartImage(partNumber: string): Promise<PartsouqImage>;
+  getPartDetails(partNumber: string): Promise<PartsouqDetails | null>;
+}
+
 /**
  * Central registry. Everything defaults to `null` (→ the local mock path is
  * used). Wiring a real provider is a one-line assignment at app startup.
@@ -78,6 +117,8 @@ export interface IntegrationRegistry {
   inventory: InventoryProvider | null;
   supplierApi: SupplierApiProvider | null;
   vin: VinProvider | null;
+  registration: RegistrationProvider | null;
+  partsouq: PartsouqProvider | null;
 }
 
 export const integrations: IntegrationRegistry = {
@@ -89,6 +130,8 @@ export const integrations: IntegrationRegistry = {
   inventory: null,
   supplierApi: null,
   vin: null,
+  registration: null,
+  partsouq: null,
 };
 
 /** True when running purely on mock logic (drives the "DEMO MODE" badge). */

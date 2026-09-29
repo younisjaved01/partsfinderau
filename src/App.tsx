@@ -7,6 +7,10 @@ import { Dashboard } from '@/pages/Dashboard';
 import { Inventory } from '@/pages/Inventory';
 import { Parts } from '@/pages/Parts';
 import { Vehicles } from '@/pages/Vehicles';
+import { Catalogue } from '@/pages/Catalogue';
+import { Sales } from '@/pages/Sales';
+import { Reports } from '@/pages/Reports';
+import { Customers } from '@/pages/Customers';
 import { Suppliers } from '@/pages/Suppliers';
 import { Rfqs } from '@/pages/Rfqs';
 import { Quotes } from '@/pages/Quotes';
@@ -24,7 +28,11 @@ export function App() {
         <Route path="/part/:id" element={<PartDetail />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/vehicles" element={<Vehicles />} />
+        <Route path="/catalogue" element={<Catalogue />} />
         <Route path="/parts" element={<Parts />} />
+        <Route path="/sales" element={<Sales />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/customers" element={<Customers />} />
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/suppliers" element={<Suppliers />} />
         <Route path="/rfqs" element={<Rfqs />} />

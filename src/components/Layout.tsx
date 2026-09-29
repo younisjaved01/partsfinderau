@@ -18,6 +18,9 @@ import {
   IconCar,
   IconShield,
   IconArrowRight,
+  IconSales,
+  IconChart,
+  IconUser,
 } from './icons';
 import { useAppStore } from '@/store/AppStore';
 import { isDemoMode } from '@/services/integrations';
@@ -45,13 +48,20 @@ export function Layout() {
   // Primary workflow: Vehicle → System → Part → Fitment → Supplier → Sourcing.
   const primary: NavEntry[] = [
     { to: '/dashboard', label: 'Dashboard', icon: IconGauge },
+    { to: '/catalogue', label: 'Catalogue', icon: IconGrid },
     { to: '/vehicles', label: 'Vehicles', icon: IconCar },
-    { to: '/parts', label: 'Parts Catalogue', icon: IconGrid },
+    { to: '/inventory', label: 'Inventory', icon: IconBox },
+  ];
+  const sourcing: NavEntry[] = [
     { to: '/suppliers', label: 'Suppliers', icon: IconStore },
     { to: '/rfqs', label: 'RFQs', icon: IconDoc, badge: () => activeRfqs },
     { to: '/quotes', label: 'Quotes', icon: IconTag, badge: () => quoteCount },
     { to: '/orders', label: 'Orders', icon: IconTruck },
-    { to: '/inventory', label: 'Inventory', icon: IconBox },
+  ];
+  const business: NavEntry[] = [
+    { to: '/sales', label: 'Sales', icon: IconSales },
+    { to: '/customers', label: 'Customers', icon: IconUser },
+    { to: '/reports', label: 'Reports', icon: IconChart },
   ];
   const secondary: NavEntry[] = [
     { to: '/history', label: 'Search History', icon: IconClock },
@@ -86,6 +96,13 @@ export function Layout() {
       </NavLink>
     );
   };
+
+  const groupLabel = (label: string) => (
+    <div className="mb-1 mt-3 flex items-center gap-2 px-3">
+      <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-ink-500">{label}</span>
+      <div className="h-px flex-1 bg-ink-800" />
+    </div>
+  );
 
   return (
     <div className="relative min-h-screen text-ink-100">
@@ -139,11 +156,11 @@ export function Layout() {
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-3">
           {primary.map(navItem)}
-          <div className="my-2 flex items-center gap-2 px-3">
-            <div className="h-px flex-1 bg-ink-800" />
-            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-ink-500">More</span>
-            <div className="h-px flex-1 bg-ink-800" />
-          </div>
+          {groupLabel('Sourcing')}
+          {sourcing.map(navItem)}
+          {groupLabel('Business')}
+          {business.map(navItem)}
+          {groupLabel('More')}
           {secondary.map(navItem)}
         </nav>
 

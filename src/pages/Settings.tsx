@@ -12,6 +12,8 @@ const labels: Record<string, { name: string; desc: string }> = {
   inventory: { name: 'Inventory / ERP', desc: 'Live stock and pricing from supplier systems' },
   supplierApi: { name: 'Supplier APIs', desc: 'Automated RFQ submission & responses' },
   vin: { name: 'VIN / rego lookup', desc: 'Decode registration or VIN to vehicle spec' },
+  registration: { name: 'Registration lookup', desc: 'Rego → vehicle (currently a mock provider)' },
+  partsouq: { name: 'Partsouq catalogue', desc: 'External OE catalogue images & references (mock)' },
 };
 
 const dataModel = ['parts', 'vehicles', 'fitments', 'brands', 'suppliers', 'inventory', 'cross_references', 'rfqs', 'quotes', 'orders', 'search_history', 'users'];

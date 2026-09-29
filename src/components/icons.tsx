@@ -112,6 +112,27 @@ export const IconShield = (p: P) => (
 export const IconBolt = (p: P) => (
   <svg {...base(p)}><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z" /></svg>
 );
+export const IconImage = (p: P) => (
+  <svg {...base(p)}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" /><path d="M4 17l4.5-4.5 3 3L15 11l5 5" /></svg>
+);
+export const IconExternal = (p: P) => (
+  <svg {...base(p)}><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6" /></svg>
+);
+export const IconUser = (p: P) => (
+  <svg {...base(p)}><circle cx="12" cy="8" r="3.5" /><path d="M5 20a7 7 0 0114 0" /></svg>
+);
+export const IconChart = (p: P) => (
+  <svg {...base(p)}><path d="M4 20V4M4 20h16M8 16v-4M12 16V8M16 16v-6" /></svg>
+);
+export const IconCart = (p: P) => (
+  <svg {...base(p)}><path d="M3 4h2l2.2 11.5a1 1 0 001 .8h8.8a1 1 0 001-.8L21 8H6" /><circle cx="9" cy="20" r="1.3" /><circle cx="18" cy="20" r="1.3" /></svg>
+);
+export const IconSidebar = (p: P) => (
+  <svg {...base(p)}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></svg>
+);
+export const IconSales = (p: P) => (
+  <svg {...base(p)}><path d="M4 20V4M4 17l5-5 3 3 7-8" /><path d="M18 7h3v3" /></svg>
+);
 
 // --- Category icons -------------------------------------------------------
 export function CategoryIcon({ category, ...p }: P & { category: PartCategory }) {

@@ -14,6 +14,7 @@ import type {
   SearchHistoryEntry,
   Part,
   SearchResult,
+  VehicleQuery,
 } from '@/types';
 import { partById } from '@/data/parts';
 import { createRfq, simulateQuote, rollupStatus } from '@/services/rfq';
@@ -42,6 +43,8 @@ interface AppState {
   history: SearchHistoryEntry[];
   activity: ActivityItem[];
   searchesToday: number;
+  /** Vehicle context that persists across the Find Part → Catalogue workflow. */
+  activeVehicle: VehicleQuery | null;
 }
 
 type Action =
@@ -55,9 +58,10 @@ type Action =
   | { type: 'CANCEL_RFQ'; rfqId: string }
   | { type: 'ADD_ORDER'; order: Order }
   | { type: 'ADD_HISTORY'; entry: SearchHistoryEntry }
-  | { type: 'PUSH_ACTIVITY'; item: ActivityItem };
+  | { type: 'PUSH_ACTIVITY'; item: ActivityItem }
+  | { type: 'SET_ACTIVE_VEHICLE'; vehicle: VehicleQuery | null };
 
-const STORAGE_KEY = 'parts-iq-state-v1';
+const STORAGE_KEY = 'parts-iq-state-v2';
 
 function uid(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
@@ -168,6 +172,7 @@ function seedState(): AppState {
       activity('rfq', 'RFQ #10480 sent to 3 suppliers'),
     ],
     searchesToday: 7,
+    activeVehicle: { make: 'Toyota', model: 'Hilux', year: 2021, engine: '2.8L Diesel' },
   };
 }
 
@@ -256,6 +261,8 @@ function reducer(state: AppState, action: Action): AppState {
       };
     case 'PUSH_ACTIVITY':
       return { ...state, activity: [action.item, ...state.activity].slice(0, 30) };
+    case 'SET_ACTIVE_VEHICLE':
+      return { ...state, activeVehicle: action.vehicle };
     default:
       return state;
   }
@@ -274,6 +281,8 @@ interface AppContextValue {
   cancelRfq: (rfqId: string) => void;
   recordSearch: (result: SearchResult) => void;
   buyNow: (part: Part, supplierId: string, quantity: number, unitPrice: number) => Order;
+  activeVehicle: VehicleQuery | null;
+  setActiveVehicle: (vehicle: VehicleQuery | null) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -391,6 +400,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const setActiveVehicle = useCallback(
+    (vehicle: VehicleQuery | null) => dispatch({ type: 'SET_ACTIVE_VEHICLE', vehicle }),
+    [],
+  );
+
   const quoteCount = state.quote.reduce((n, l) => n + l.quantity, 0);
 
   const value = useMemo<AppContextValue>(
@@ -407,8 +421,10 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       cancelRfq,
       recordSearch,
       buyNow,
+      activeVehicle: state.activeVehicle,
+      setActiveVehicle,
     }),
-    [state, addToQuote, removeFromQuote, setQuoteQty, clearQuote, quoteCount, sendRfq, respondRfq, awardRfq, cancelRfq, recordSearch, buyNow],
+    [state, addToQuote, removeFromQuote, setQuoteQty, clearQuote, quoteCount, sendRfq, respondRfq, awardRfq, cancelRfq, recordSearch, buyNow, setActiveVehicle],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
