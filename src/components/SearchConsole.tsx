@@ -1,7 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'motion/react';
 import type { SearchInput, VehicleQuery } from '@/types';
 import { vehicles, makes } from '@/data/vehicles';
+import { TypewriterText } from './ui/TypewriterText';
 import {
   IconCamera,
   IconMic,
@@ -13,6 +15,19 @@ import {
   IconSearch,
   IconWrench,
 } from './icons';
+
+// Animated example prompts for the hero search — reflect the ways a 4WD
+// interpreter can search (rego, VIN, natural language, part number).
+const SEARCH_EXAMPLES = [
+  'Search by registration…',
+  'Search by VIN…',
+  'Describe the part you need…',
+  'Try: front shocks for a 79…',
+  'Try: brake pads for GUN126…',
+  'Try: clutch kit for a Hilux…',
+  'Try: wheel bearings for a Prado…',
+  'Try: CVs for a Patrol…',
+];
 
 /**
  * The vehicle-first multimodal search console. A 4WD interpreter thinks
@@ -70,6 +85,7 @@ export function SearchConsole({
   const [voiceTranscript, setVoiceTranscript] = useState(initial?.voiceTranscript ?? '');
   const [recording, setRecording] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [focused, setFocused] = useState(false);
   const [showPartNumber, setShowPartNumber] = useState(Boolean(initial?.partNumber));
   const [veh, setVeh] = useState<VehState>({
     ...emptyVeh,
@@ -238,7 +254,8 @@ export function SearchConsole({
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              onFocus={pulseBackground}
+              onFocus={() => { setFocused(true); pulseBackground(); }}
+              onBlur={() => setFocused(false)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -246,9 +263,27 @@ export function SearchConsole({
                 }
               }}
               rows={variant === 'hero' ? 2 : 1}
-              placeholder={'Type a part, describe it, or paste a part number — "79 series shock", "patrol radius arm bushes", "that dust filter box thing"…'}
+              aria-label="Search for a 4WD part by description, part number, registration or VIN"
+              placeholder=""
               className="input resize-none py-3 pl-10"
             />
+            {/* Animated example prompt — decorative overlay shown only when the
+                field is empty and unfocused; pointer-events-none so it never
+                blocks typing. Fades in/out; the real input stays clear. */}
+            <AnimatePresence>
+              {!focused && !text && (
+                <motion.div
+                  key="typewriter"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="pointer-events-none absolute left-10 right-3 top-3 text-sm text-ink-500"
+                >
+                  <TypewriterText phrases={SEARCH_EXAMPLES} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
