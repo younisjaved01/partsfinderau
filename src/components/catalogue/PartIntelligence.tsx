@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { panelVariants, tapScale } from '@/lib/motion';
 import type { Part, VehicleQuery } from '@/types';
 import type { PartsouqRef, PartsouqImage } from '@/services/integrations';

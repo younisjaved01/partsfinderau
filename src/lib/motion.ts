@@ -1,4 +1,4 @@
-import type { Variants } from 'framer-motion';
+import type { Variants } from 'motion/react';
 
 /**
  * Shared Motion variants for PARTS IQ. Subtle, fast, transform/opacity-only

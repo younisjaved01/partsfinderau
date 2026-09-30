@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { rowVariants, collapseVariants, fadeVariants, tapScale, EASE } from '@/lib/motion';
 import type { Part, PartCategory, ScoredPart, SearchResult, VehicleQuery } from '@/types';
 import { useAppStore } from '@/store/AppStore';
