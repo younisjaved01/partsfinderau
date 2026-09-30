@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { FourWDBackground } from './ui/FourWDBackground';
+import { getLlmStatus } from '@/services/llm/client';
+import type { LlmStatus } from '@/services/llm/types';
 import {
   LogoMark,
   IconGauge,
@@ -42,6 +44,12 @@ export function Layout() {
   const { pathname } = useLocation();
   // Strongest motion on the Find Parts hero; subtle everywhere else.
   const bgIntensity = pathname === '/' ? 'hero' : 'ambient';
+
+  // Reflect the real reasoning provider (offline mock vs live OpenAI).
+  const [llm, setLlm] = useState<LlmStatus | null>(null);
+  useEffect(() => {
+    getLlmStatus().then(setLlm).catch(() => setLlm({ provider: 'mock' }));
+  }, []);
 
   const activeRfqs = state.rfqs.filter((r) => r.status === 'open' || r.status === 'partial').length;
 
@@ -194,11 +202,18 @@ export function Layout() {
             <span className="hidden sm:inline">Find a part…</span>
           </button>
           <div className="ml-auto flex items-center gap-2">
-            {isDemoMode() && (
-              <span className="pill border-iq-500/40 bg-iq-500/10 text-iq-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-iq-400" />
-                Demo Mode
+            {llm?.provider === 'openai' ? (
+              <span className="pill border-signal-green/40 bg-signal-green/10 text-signal-green" title={`Live AI reasoning · ${llm.model}`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-signal-green" />
+                AI · {llm.model}
               </span>
+            ) : (
+              isDemoMode() && (
+                <span className="pill border-iq-500/40 bg-iq-500/10 text-iq-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-iq-400" />
+                  Demo Mode
+                </span>
+              )
             )}
             <button
               onClick={() => navigate('/quotes')}

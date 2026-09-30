@@ -33,12 +33,90 @@ Other scripts:
 
 ```bash
 npm run build      # type-check (tsc -b) + production build
-npm run preview    # serve the production build
+npm run preview    # serve the production build (static, no API)
+npm run start      # run the production server (dist + /api) — node server.mjs
+npm run serve      # build + start in one step
 npm run typecheck  # types only
 ```
 
 No API keys, environment variables or external services are required — the app
-boots straight into **Demo Mode**.
+boots straight into **Demo Mode** with the offline reasoning engine.
+
+## AI reasoning (OpenAI) — optional
+
+PARTS IQ can use a **real OpenAI model** as its reasoning layer. The LLM's only
+job is to *understand and structure* the request ("shockey for a 79" → Toyota
+LandCruiser 79 Series · Suspension · Shock Absorber). It is **never** the source
+of truth for part numbers, prices, stock, ETA, suppliers, fitment or OEM data —
+those always come from the catalogue / provider layer.
+
+### How it works
+
+```
+User → PARTS IQ frontend → /api/interpret (our backend) → OpenAI Responses API
+     → structured PartsSearchRequest → Parts Intelligence Engine
+     → catalogue / provider data → verified PARTS IQ result
+```
+
+- The browser only ever calls **our own** `/api/interpret`, never OpenAI. The
+  API key lives **only** on the server (Vite dev middleware in dev, `server.mjs`
+  in production) and is never in the client bundle.
+- The backend calls the **OpenAI Responses API** with **strict JSON-schema
+  structured output** (`server/prompt.mjs`, `server/interpretHandler.mjs`).
+- The frontend engine (`src/services/partsIntelligence.ts`) grounds the LLM's
+  structured output onto our catalogue lexicon, then runs the existing scoring,
+  fitment and catalogue search unchanged.
+
+### Configure OpenAI locally
+
+```bash
+cp .env.example .env      # .env is git-ignored — never commit it
+# edit .env:
+#   OPENAI_API_KEY=sk-...        (your key; blank = Demo Mode)
+#   OPENAI_MODEL=gpt-4o-mini     (any current model; optional)
+#   LLM_PROVIDER=openai          (or "mock"; optional)
+npm run dev                # dev middleware serves /api/interpret with your key
+```
+
+When a key is present the header shows an **AI · <model>** badge; without one it
+shows **Demo Mode**.
+
+### Environment variables (server-side only)
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `OPENAI_API_KEY` | OpenAI key — **server-side only**, blank = Demo Mode | _(none)_ |
+| `OPENAI_MODEL` | Model for request understanding | `gpt-4o-mini` |
+| `LLM_PROVIDER` | Force `openai` or `mock` | `openai` if key set, else `mock` |
+| `PORT` | Production server port (`server.mjs`) | `4173` |
+
+None are prefixed `VITE_`, so none are ever exposed to the browser.
+
+### Mock vs OpenAI providers
+
+- **Mock (offline)** — `computeLocal()` in `partsIntelligence.ts`: deterministic
+  alias/keyword interpretation. Always available, zero cost, powers Demo Mode.
+- **OpenAI** — real reasoning via the backend. Used only when a key is set; on
+  any error or timeout it falls back to the mock so the app never breaks.
+
+### Adding another provider (e.g. Claude) later
+
+Implement a sibling of the OpenAI call in `server/interpretHandler.mjs` (same
+`PartsSearchRequest` shape and JSON schema), select it via `LLM_PROVIDER`, and
+nothing on the frontend changes — it consumes the same `/api/interpret`
+contract (`src/services/llm/types.ts`).
+
+### Security notes
+
+The key must stay server-side because anything in the frontend bundle (or a
+`VITE_`-prefixed variable) is shipped to and readable by every visitor. Keeping
+it in `server.mjs` / the dev middleware means it never leaves your machine/host.
+`.env` is git-ignored; only `.env.example` (no secret) is committed.
+
+> Data ownership stays clear: **LLM = understands the request**, **Catalogue =
+> source of truth**, **Vehicle/rego provider = vehicle identification**,
+> **Supplier/ERP = stock, price, availability**, **future OEM provider = OEM
+> references**. OEM/parts data does **not** come from OpenAI.
 
 ## Try it (Demo Mode)
 

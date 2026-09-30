@@ -22,7 +22,7 @@ import { vehicleById, vehicleLabel } from '@/data/vehicles';
 import { aud } from '@/lib/format';
 
 const analysisSteps = [
-  'Parsing all inputs',
+  'Understanding your request',
   'Visual features & markings',
   'Interpreting description',
   'Matching vehicle fitment',
@@ -200,6 +200,11 @@ function InterpretationPanel({
           <div className="flex items-center gap-2">
             <IconSpark width={15} height={15} className="text-iq-400" />
             <span className="text-xs font-bold uppercase tracking-widest text-ink-400">Parts Intelligence read this as</span>
+            {i.aiProvider === 'openai' && (
+              <span className="pill border-signal-green/40 bg-signal-green/10 text-signal-green" title={i.aiModel}>
+                AI reasoning · OpenAI
+              </span>
+            )}
           </div>
           <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
             <Field label="Vehicle" value={i.detectedVehicleLabel} />

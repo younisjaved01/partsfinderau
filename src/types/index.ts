@@ -241,6 +241,12 @@ export interface Interpretation {
   clarification?: Clarification;
   /** Normalised phrases the engine mapped colloquial terms onto. */
   normalisedTerms: { from: string; to: string }[];
+  /** Which reasoning provider produced this: real LLM ('openai') or 'offline' mock. */
+  aiProvider?: 'openai' | 'offline';
+  /** Model name when a real LLM was used (never a secret). */
+  aiModel?: string;
+  /** Structured gaps the LLM flagged (e.g. "position unknown"). */
+  missingInformation?: string[];
 }
 
 export interface ScoredPart {

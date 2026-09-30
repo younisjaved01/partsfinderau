@@ -10,6 +10,8 @@ import type {
 } from '@/types';
 import { vehicles, vehicleLabel } from '@/data/vehicles';
 import { partTemplates } from '@/data/partTemplates';
+import { requestLlmInterpretation } from './llm/client';
+import type { PartsSearchRequest } from './llm/types';
 
 /**
  * PARTS INTELLIGENCE ENGINE (§17)
@@ -212,8 +214,12 @@ function imageHint(imageName?: string): { category?: PartCategory; term?: string
 // The engine
 // ---------------------------------------------------------------------------
 
-class MockPartsIntelligence implements PartsIntelligence {
-  async interpret(input: SearchInput): Promise<Interpretation> {
+/**
+ * Local, deterministic interpretation — the offline mock. Always runs, and is
+ * the fallback whenever the real LLM is unavailable (Demo Mode / no key).
+ */
+function computeLocal(input: SearchInput): Interpretation {
+  {
     const reasoning: string[] = [];
     const normalisedTerms: { from: string; to: string }[] = [];
     const modalities: SearchModality[] = [];
@@ -334,8 +340,149 @@ class MockPartsIntelligence implements PartsIntelligence {
   }
 }
 
-/** The active engine. Swap this binding to connect a real provider (§26). */
+/** Offline mock provider — wraps the local interpreter. Preserves Demo Mode. */
+class MockPartsIntelligence implements PartsIntelligence {
+  async interpret(input: SearchInput): Promise<Interpretation> {
+    return { ...computeLocal(input), aiProvider: 'offline' };
+  }
+}
+
+/** The offline engine (always available, no API key required). */
 export const partsIntelligence: PartsIntelligence = new MockPartsIntelligence();
 
-export const interpret = (input: SearchInput): Promise<Interpretation> =>
-  partsIntelligence.interpret(input);
+// --- LLM grounding helpers -------------------------------------------------
+
+const categoryByName: Record<string, PartCategory> = {
+  brake: 'Brake', brakes: 'Brake', suspension: 'Suspension', steering: 'Steering',
+  engine: 'Engine', cooling: 'Cooling', electrical: 'Electrical', filter: 'Filters',
+  filters: 'Filters', clutch: 'Clutch', transmission: 'Transmission', gearbox: 'Transmission',
+  driveline: 'Driveline', drivetrain: 'Driveline', bearing: 'Bearings', bearings: 'Bearings',
+  body: 'Body', exhaust: 'Exhaust',
+};
+function mapCategory(s: string | null): PartCategory | undefined {
+  if (!s) return undefined;
+  const key = s.toLowerCase().trim();
+  return categoryByName[key] ?? categoryByName[key.replace(/s$/, '')];
+}
+
+/** Ground an LLM part type onto our catalogue lexicon when possible. */
+function groundTerm(type: string | null): TermEntry | undefined {
+  if (!type) return undefined;
+  const t = ` ${type.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim()} `;
+  return (
+    termIndex.find((e) => t.trim() === e.phrase) ??
+    termIndex.find((e) => t.includes(` ${e.phrase} `) || t.includes(` ${e.phrase}`))
+  );
+}
+
+function resolveLlmVehicle(v: PartsSearchRequest['vehicle']): Vehicle | undefined {
+  if (!v.make && !v.model) return undefined;
+  const matches = vehicles.filter(
+    (x) =>
+      (!v.make || x.make.toLowerCase() === v.make!.toLowerCase()) &&
+      (!v.model ||
+        x.model.toLowerCase().includes(v.model!.toLowerCase()) ||
+        v.model!.toLowerCase().includes(x.model.toLowerCase())),
+  );
+  if (matches.length <= 1) return matches[0];
+  const s = (v.series ?? '').toLowerCase();
+  return (
+    matches.find((x) => s && ((x.series ?? '').toLowerCase().includes(s) || (x.chassis ?? '').toLowerCase() === s)) ??
+    matches.find((x) => s && x.aliases.some((a) => a.toLowerCase().includes(s))) ??
+    matches[0]
+  );
+}
+
+/** Merge a real LLM structured request onto the local interpretation. */
+function mergeLlm(
+  local: Interpretation,
+  req: PartsSearchRequest,
+  input: SearchInput,
+  model?: string,
+): Interpretation {
+  // If the LLM added no usable signal, keep the local interpretation.
+  if (!req.part.type && !req.part.category && !req.vehicle.make && !req.vehicle.model) {
+    return { ...local, aiProvider: 'offline' };
+  }
+
+  const reasoning: string[] = [`Understood by OpenAI${model ? ` (${model})` : ''}`];
+  const normalisedTerms: { from: string; to: string }[] = [];
+
+  const veh = resolveLlmVehicle(req.vehicle) ?? local.detectedVehicle;
+  if (veh) reasoning.push(`Vehicle: ${vehicleLabel(veh)}`);
+
+  // Part term / category grounded to our catalogue lexicon.
+  const grounded = groundTerm(req.part.type);
+  const detectedPartTerm = grounded?.canonicalTerm ?? req.part.type?.toLowerCase() ?? local.detectedPartTerm;
+  const detectedCategory = grounded?.category ?? mapCategory(req.part.category) ?? local.detectedCategory;
+  if (req.part.type && detectedPartTerm && req.part.type.toLowerCase() !== detectedPartTerm) {
+    normalisedTerms.push({ from: req.part.type, to: detectedPartTerm });
+    reasoning.push(`Translated "${req.part.type}" → catalogue term "${detectedPartTerm}"`);
+  } else if (detectedPartTerm) {
+    reasoning.push(`Part: ${detectedPartTerm}`);
+  }
+
+  const pos = req.part.position;
+  const position: PartPosition | undefined = pos === 'Front' ? 'front' : pos === 'Rear' ? 'rear' : local.position;
+  if (position) reasoning.push(`Position: ${position}`);
+  const year = req.vehicle.year ?? local.year;
+  if (year) reasoning.push(`Year: ${year}`);
+  const engine = req.vehicle.engine ?? input.vehicle?.engine ?? local.engine;
+  if (engine) reasoning.push(`Engine: ${engine}`);
+  if (req.part.application) reasoning.push(`Application: ${req.part.application}`);
+  for (const m of req.missingInformation ?? []) reasoning.push(`Needs confirmation: ${m}`);
+
+  // Reuse the local front/rear clarification when position is still unknown.
+  const textParts = [input.text, input.voiceTranscript, input.partNumber].filter(Boolean).join(' ');
+  let clarification: Interpretation['clarification'];
+  if (detectedPartTerm && !position && needsPositionClarification(detectedPartTerm)) {
+    clarification = {
+      question: `Do you need front or rear ${detectedPartTerm}?`,
+      field: 'position',
+      options: [
+        { label: 'Front', patch: { text: `front ${textParts}` } },
+        { label: 'Rear', patch: { text: `rear ${textParts}` } },
+        { label: 'Not sure — show both', patch: {} },
+      ],
+    };
+  }
+
+  return {
+    detectedVehicle: veh,
+    detectedVehicleLabel: veh ? vehicleLabel(veh) : undefined,
+    detectedCategory,
+    detectedPartTerm,
+    position,
+    side: local.side,
+    year,
+    engine,
+    confidence: Math.max(0, Math.min(0.98, req.confidence || local.confidence)),
+    reasoning,
+    modalities: local.modalities,
+    clarification,
+    normalisedTerms,
+    aiProvider: 'openai',
+    aiModel: model,
+    missingInformation: req.missingInformation,
+  };
+}
+
+/**
+ * Public entry point. Tries the real LLM (via OUR backend) to STRUCTURE the
+ * request, then continues through the existing engine and catalogue. Falls back
+ * to the offline mock whenever the LLM is unavailable — so Demo Mode always
+ * works with no API key. The LLM never supplies part data (numbers, price,
+ * stock, fitment) — only the structured understanding of the request.
+ */
+export async function interpret(input: SearchInput): Promise<Interpretation> {
+  const local = computeLocal(input);
+  const textParts = [input.text, input.voiceTranscript, input.partNumber].filter(Boolean).join(' ').trim();
+  if (!textParts) return { ...local, aiProvider: 'offline' };
+  try {
+    const llm = await requestLlmInterpretation(textParts, input.vehicle);
+    if (llm) return mergeLlm(local, llm.request, input, llm.model);
+  } catch {
+    /* fall through to offline */
+  }
+  return { ...local, aiProvider: 'offline' };
+}
