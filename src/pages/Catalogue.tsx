@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { rowVariants, collapseVariants, fadeVariants, tapScale, EASE } from '@/lib/motion';
 import type { Part, PartCategory, ScoredPart, SearchResult, VehicleQuery } from '@/types';
 import { useAppStore } from '@/store/AppStore';
 import { search } from '@/services/partsSearch';
@@ -209,21 +211,32 @@ export function Catalogue() {
                     <span className="flex-1 text-left font-medium">{g.category === 'Brake' ? 'Brakes' : g.category}</span>
                     <IconChevron width={13} height={13} className={`text-ink-500 transition-transform ${open ? 'rotate-90' : ''}`} />
                   </button>
-                  {open && (
-                    <div className="mb-1 ml-3 border-l border-ink-800 pl-2">
-                      {g.subGroups.map((s) => (
-                        <button
-                          key={s.name}
-                          onClick={() => selectSub(g.category, s.name)}
-                          className={`block w-full rounded px-2 py-1 text-left text-xs transition ${
-                            subGroup === s.name ? 'text-iq-300' : 'text-ink-400 hover:text-ink-100'
-                          }`}
-                        >
-                          {s.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {open && (
+                      <motion.div
+                        key="sub"
+                        variants={collapseVariants}
+                        initial="hidden"
+                        animate="show"
+                        exit="exit"
+                        className="overflow-hidden"
+                      >
+                        <div className="mb-1 ml-3 border-l border-ink-800 pl-2">
+                          {g.subGroups.map((s) => (
+                            <button
+                              key={s.name}
+                              onClick={() => selectSub(g.category, s.name)}
+                              className={`block w-full rounded px-2 py-1 text-left text-xs transition ${
+                                subGroup === s.name ? 'text-iq-300' : 'text-ink-400 hover:text-ink-100'
+                              }`}
+                            >
+                              {s.name}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
@@ -247,7 +260,7 @@ export function Catalogue() {
                   className="input pl-9"
                 />
               </div>
-              <button onClick={submit} className="btn-primary shrink-0 px-5 font-display uppercase tracking-wide">Find</button>
+              <motion.button whileTap={tapScale} onClick={submit} className="btn-primary shrink-0 px-5 font-display uppercase tracking-wide">Find</motion.button>
               <button
                 onClick={() => navigate('/', { state: { vehicle: activeVehicle ?? undefined } })}
                 className="btn-ghost hidden shrink-0 px-3 sm:inline-flex"
@@ -271,54 +284,81 @@ export function Catalogue() {
 
           {/* Results list (dense table/list hybrid) */}
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {searching ? (
-              <div className="flex items-center gap-2 p-6 text-sm text-ink-400">
-                <span className="h-4 w-4 rounded-full border-2 border-ink-600 border-t-iq-400 animate-spin" /> Searching the catalogue…
-              </div>
-            ) : rows.length === 0 ? (
-              <div className="p-6 text-sm text-ink-400">
-                No parts here for {activeVehicle ? `${activeVehicle.make} ${activeVehicle.model}` : 'this filter'}. Try another category or search.
-              </div>
-            ) : (
-              <table className="w-full text-left text-sm">
-                <thead className="sticky top-0 z-10 bg-ink-900 text-[10px] uppercase tracking-wider text-ink-500">
-                  <tr>
-                    <th className="px-3 py-2 font-semibold">Part No.</th>
-                    <th className="px-3 py-2 font-semibold">Description</th>
-                    <th className="hidden px-3 py-2 font-semibold md:table-cell">Fitment</th>
-                    <th className="hidden px-3 py-2 font-semibold sm:table-cell">Stock</th>
-                    <th className="px-3 py-2 text-right font-semibold">Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map(({ part, score }) => {
-                    const active = part.id === selectedId;
-                    const stripe = score >= 0.85 ? 'bg-signal-green' : score >= 0.6 ? 'bg-signal-amber' : 'bg-signal-red';
-                    return (
-                      <tr
-                        key={part.id}
-                        onClick={() => onSelectRow(part.id)}
-                        className={`cursor-pointer border-b border-ink-800/70 transition-colors ${active ? 'bg-iq-500/10' : 'hover:bg-ink-900/60'}`}
-                      >
-                        <td className="relative px-3 py-2.5 pl-4">
-                          <span className={`absolute inset-y-0 left-0 w-1 ${active ? stripe : 'bg-transparent'}`} />
-                          <span className="font-mono text-xs font-semibold text-iq-300">{part.partNumber}</span>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <span className="block font-medium text-ink-50">{part.name.split(' — ')[0]}</span>
-                          <span className="block text-[11px] text-ink-500">{part.name.split(' — ')[1]}</span>
-                        </td>
-                        <td className="hidden px-3 py-2.5 md:table-cell"><FitmentBadge score={score} size="sm" /></td>
-                        <td className="hidden px-3 py-2.5 sm:table-cell"><StockBadge part={part} /></td>
-                        <td className="px-3 py-2.5 text-right">
-                          <span className="stat-num font-bold text-ink-50">{aud(bestPrice(part))}</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
+            <AnimatePresence mode="wait">
+              {searching ? (
+                <motion.div
+                  key="loading"
+                  variants={fadeVariants}
+                  initial="hidden"
+                  animate="show"
+                  exit="exit"
+                  className="flex items-center gap-2 p-6 text-sm text-ink-300"
+                >
+                  <span className="h-4 w-4 rounded-full border-2 border-ink-600 border-t-iq-400 animate-spin" />
+                  Understanding your request…
+                </motion.div>
+              ) : rows.length === 0 ? (
+                <motion.div key="empty" variants={fadeVariants} initial="hidden" animate="show" exit="exit" className="p-6 text-sm text-ink-400">
+                  No parts here for {activeVehicle ? `${activeVehicle.make} ${activeVehicle.model}` : 'this filter'}. Try another category or search.
+                </motion.div>
+              ) : (
+                <motion.table
+                  key={`table:${mode}:${category ?? ''}:${subGroup ?? ''}:${q}:${rows.length}`}
+                  variants={fadeVariants}
+                  initial="hidden"
+                  animate="show"
+                  exit="exit"
+                  className="w-full text-left text-sm"
+                >
+                  <thead className="sticky top-0 z-10 bg-ink-900 text-[10px] uppercase tracking-wider text-ink-500">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">Part No.</th>
+                      <th className="px-3 py-2 font-semibold">Description</th>
+                      <th className="hidden px-3 py-2 font-semibold md:table-cell">Fitment</th>
+                      <th className="hidden px-3 py-2 font-semibold sm:table-cell">Stock</th>
+                      <th className="px-3 py-2 text-right font-semibold">Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map(({ part, score }, i) => {
+                      const active = part.id === selectedId;
+                      const stripe = score >= 0.85 ? 'bg-signal-green' : score >= 0.6 ? 'bg-signal-amber' : 'bg-signal-red';
+                      return (
+                        <motion.tr
+                          key={part.id}
+                          custom={i}
+                          variants={rowVariants}
+                          initial="hidden"
+                          animate="show"
+                          onClick={() => onSelectRow(part.id)}
+                          className={`cursor-pointer border-b border-ink-800/70 transition-colors ${active ? 'bg-iq-500/10' : 'hover:bg-ink-900/60'}`}
+                        >
+                          <td className="relative px-3 py-2.5 pl-4">
+                            <motion.span
+                              className={`absolute inset-y-0 left-0 w-1 ${stripe}`}
+                              initial={false}
+                              animate={{ opacity: active ? 1 : 0, scaleY: active ? 1 : 0.3 }}
+                              transition={{ duration: 0.18, ease: EASE }}
+                              style={{ transformOrigin: 'center' }}
+                            />
+                            <span className="font-mono text-xs font-semibold text-iq-300">{part.partNumber}</span>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <span className="block font-medium text-ink-50">{part.name.split(' — ')[0]}</span>
+                            <span className="block text-[11px] text-ink-500">{part.name.split(' — ')[1]}</span>
+                          </td>
+                          <td className="hidden px-3 py-2.5 md:table-cell"><FitmentBadge score={score} size="sm" /></td>
+                          <td className="hidden px-3 py-2.5 sm:table-cell"><StockBadge part={part} /></td>
+                          <td className="px-3 py-2.5 text-right">
+                            <span className="stat-num font-bold text-ink-50">{aud(bestPrice(part))}</span>
+                          </td>
+                        </motion.tr>
+                      );
+                    })}
+                  </tbody>
+                </motion.table>
+              )}
+            </AnimatePresence>
           </div>
         </section>
 

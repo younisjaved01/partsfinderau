@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { panelVariants, tapScale } from '@/lib/motion';
 import type { Part, VehicleQuery } from '@/types';
 import type { PartsouqRef, PartsouqImage } from '@/services/integrations';
 import { offersForPart } from '@/services/suppliers';
@@ -106,6 +108,15 @@ export function PartIntelligence({
 
   return (
     <div className="flex h-full flex-col">
+      {/* Keyed remount → new part content fades in without an exit gap, so the
+          column height stays stable (no jump) while switching parts. */}
+      <motion.div
+        key={part.id}
+        variants={panelVariants}
+        initial="hidden"
+        animate="show"
+        className="flex min-h-0 flex-1 flex-col"
+      >
       {/* Header */}
       <div className="relative border-b border-ink-800 p-4">
         {onClose && (
@@ -231,25 +242,51 @@ export function PartIntelligence({
           )}
         </Section>
       </div>
+      </motion.div>
 
       {/* Actions */}
       <div className="border-t border-ink-800 p-3">
         <div className="grid grid-cols-2 gap-2">
-          <button
+          <motion.button
+            whileTap={tapScale}
             onClick={() => {
               onAddToCart(part);
               setAdded(true);
             }}
-            className="btn-primary col-span-2 font-display uppercase tracking-wide"
+            className={`col-span-2 font-display uppercase tracking-wide transition-colors ${added ? 'btn bg-signal-green/15 text-signal-green ring-1 ring-inset ring-signal-green/40' : 'btn-primary'}`}
           >
-            <IconCart width={16} height={16} /> {added ? 'Added to cart ✓' : 'Add to Cart'}
-          </button>
-          <button onClick={() => onAddToCart(part)} className="btn-ghost text-xs">
+            <AnimatePresence mode="wait" initial={false}>
+              {added ? (
+                <motion.span
+                  key="added"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.16 }}
+                  className="inline-flex items-center gap-2"
+                >
+                  <IconCheck width={16} height={16} /> Added to cart
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="add"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.16 }}
+                  className="inline-flex items-center gap-2"
+                >
+                  <IconCart width={16} height={16} /> Add to Cart
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+          <motion.button whileTap={tapScale} onClick={() => onAddToCart(part)} className="btn-ghost text-xs">
             <IconTag width={14} height={14} /> Add to Quote
-          </button>
-          <button onClick={() => onRequestQuote(part)} className="btn-ghost text-xs">
+          </motion.button>
+          <motion.button whileTap={tapScale} onClick={() => onRequestQuote(part)} className="btn-ghost text-xs">
             <IconStore width={14} height={14} /> Supplier Quote
-          </button>
+          </motion.button>
         </div>
         <Link to={`/part/${part.id}`} className="mt-2 flex items-center justify-center gap-1 text-xs font-semibold text-iq-400 hover:gap-2">
           Open full part page <IconArrowRight width={13} height={13} />
