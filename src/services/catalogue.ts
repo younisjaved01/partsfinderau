@@ -78,7 +78,9 @@ export function resolveVehicleId(vq?: VehicleQuery | null): string | undefined {
     (x) =>
       (!vq.make || x.make.toLowerCase() === vq.make.toLowerCase()) &&
       (!vq.model || x.model.toLowerCase() === vq.model.toLowerCase()) &&
-      (!vq.series || (x.series ?? '').toLowerCase().includes(vq.series.toLowerCase())),
+      (!vq.series ||
+        (x.series ?? '').toLowerCase().includes(vq.series.toLowerCase()) ||
+        (x.chassis ?? '').toLowerCase() === vq.series.toLowerCase()),
   );
   return v?.id;
 }

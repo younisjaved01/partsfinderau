@@ -8,6 +8,7 @@ import { Inventory } from '@/pages/Inventory';
 import { Parts } from '@/pages/Parts';
 import { Vehicles } from '@/pages/Vehicles';
 import { Catalogue } from '@/pages/Catalogue';
+import { ClassicCatalogue } from '@/pages/ClassicCatalogue';
 import { Sales } from '@/pages/Sales';
 import { Reports } from '@/pages/Reports';
 import { Customers } from '@/pages/Customers';
@@ -22,6 +23,8 @@ import { Settings } from '@/pages/Settings';
 export function App() {
   return (
     <Routes>
+      {/* Full-screen legacy-style catalogue (no app chrome) */}
+      <Route path="/classic" element={<ClassicCatalogue />} />
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="/search" element={<SearchResults />} />

@@ -72,6 +72,7 @@ export function Layout() {
     { to: '/reports', label: 'Reports', icon: IconChart },
   ];
   const secondary: NavEntry[] = [
+    { to: '/classic', label: 'Classic Catalogue', icon: IconGrid },
     { to: '/history', label: 'Search History', icon: IconClock },
     { to: '/supplier-portal', label: 'Supplier Portal', icon: IconShield },
     { to: '/settings', label: 'Settings', icon: IconSettings },
