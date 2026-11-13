@@ -1,5 +1,5 @@
 import type { Part, PartCategory, VehicleQuery } from '@/types';
-import { partTemplates } from '@/data/partTemplates';
+import { partTemplates, type PartTemplate } from '@/data/partTemplates';
 import { parts } from '@/data/parts';
 import { vehicles } from '@/data/vehicles';
 
@@ -34,7 +34,15 @@ const templateMeta: Record<string, TemplateMeta> = Object.fromEntries(
   ]),
 );
 
-const templateKeyOf = (part: Part) => part.id.split('__')[0];
+export const templateKeyOf = (part: Part) => part.id.split('__')[0];
+
+const templateByKey: Record<string, PartTemplate> = Object.fromEntries(
+  partTemplates.map((t) => [t.key, t]),
+);
+
+/** The source template a generated part was expanded from, if resolvable. */
+export const templateForPart = (part: Part): PartTemplate | undefined =>
+  templateByKey[templateKeyOf(part)];
 
 export function partMeta(part: Part): TemplateMeta {
   return templateMeta[templateKeyOf(part)] ?? { category: part.category, subGroup: part.category, canonicalTerm: part.category };
@@ -111,6 +119,26 @@ export function browseCatalogue(q: CatalogueQuery): Part[] {
     if (q.category && meta.category !== q.category) continue;
     if (q.subGroup && meta.subGroup !== q.subGroup) continue;
     if (vehId && !part.fitments.some((f) => f.vehicleId === vehId)) continue;
+    const groupKey = part.id.split('__').slice(0, 2).join('__');
+    const existing = groups.get(groupKey);
+    if (!existing || tierRank(part) < tierRank(existing)) groups.set(groupKey, part);
+  }
+  return Array.from(groups.values());
+}
+
+/**
+ * Resolve a canonical catalogue term (e.g. "brake rotor") to one representative
+ * (best-tier) part per matching template, limited to the given vehicle when
+ * supplied. Used to surface genuinely related catalogue items — a term with no
+ * catalogued part for the vehicle simply yields nothing (never fabricated).
+ */
+export function partsByCanonicalTerm(term: string, vehicleId?: string): Part[] {
+  const keys = partTemplates.filter((t) => t.canonicalTerm === term).map((t) => t.key);
+  if (keys.length === 0) return [];
+  const groups = new Map<string, Part>();
+  for (const part of parts) {
+    if (!keys.includes(templateKeyOf(part))) continue;
+    if (vehicleId && !part.fitments.some((f) => f.vehicleId === vehicleId)) continue;
     const groupKey = part.id.split('__').slice(0, 2).join('__');
     const existing = groups.get(groupKey);
     if (!existing || tierRank(part) < tierRank(existing)) groups.set(groupKey, part);

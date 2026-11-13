@@ -11,7 +11,9 @@ function resolveVehicle(vq: VehicleQuery): Vehicle | undefined {
     (v) =>
       (!vq.make || v.make.toLowerCase() === vq.make.toLowerCase()) &&
       (!vq.model || v.model.toLowerCase() === vq.model.toLowerCase()) &&
-      (!vq.series || (v.series ?? '').toLowerCase().includes(vq.series.toLowerCase())),
+      (!vq.series ||
+        (v.series ?? '').toLowerCase().includes(vq.series.toLowerCase()) ||
+        (v.chassis ?? '').toLowerCase() === vq.series.toLowerCase()),
   );
 }
 

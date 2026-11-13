@@ -16,6 +16,8 @@ export type ID = string;
 // Vehicles & fitment
 // ---------------------------------------------------------------------------
 
+export type DriveType = '4WD' | '2WD' | 'AWD';
+
 export interface Vehicle {
   id: ID;
   make: string;
@@ -27,6 +29,10 @@ export interface Vehicle {
   yearTo: number;
   engines: string[];
   transmissions: string[];
+  /** Drive configuration, when known. */
+  drive?: DriveType;
+  /** Body style, when known (e.g. "Dual Cab Ute", "Wagon"). */
+  bodyType?: string;
   /** Common informal names a user might type: "79", "80 series", "landy". */
   aliases: string[];
 }
@@ -82,12 +88,23 @@ export interface InventoryRecord {
 // Cross references & parts
 // ---------------------------------------------------------------------------
 
+/**
+ * How a cross-reference / OEM number is trusted. The prototype never claims
+ * a reference is 'verified' unless it comes from a verified provider — all
+ * generated references are 'suggested'.
+ */
+export type ReferenceStatus = 'verified' | 'suggested' | 'superseded' | 'previous';
+
 export interface CrossReference {
   brandId: ID;
   partNumber: string;
   quality: QualityTier;
   note?: string;
+  status?: ReferenceStatus;
 }
+
+/** Fitment confidence a parts interpreter reads at the counter (§Fitment). */
+export type FitmentConfidence = 'confirmed' | 'partial' | 'needs-verification' | 'not-confirmed';
 
 export type PartCategory =
   | 'Brake'
