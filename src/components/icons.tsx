@@ -133,6 +133,12 @@ export const IconSidebar = (p: P) => (
 export const IconSales = (p: P) => (
   <svg {...base(p)}><path d="M4 20V4M4 17l5-5 3 3 7-8" /><path d="M18 7h3v3" /></svg>
 );
+export const IconHeart = (p: P) => (
+  <svg {...base(p)}><path d="M12 20s-7-4.5-9.3-9A4.6 4.6 0 0112 5a4.6 4.6 0 019.3 6c-2.3 4.5-9.3 9-9.3 9z" /></svg>
+);
+export const IconUsers = (p: P) => (
+  <svg {...base(p)}><circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0112 0M16 5.5a3 3 0 010 5.8M21 20a6 6 0 00-5-5.9" /></svg>
+);
 
 // --- Category icons -------------------------------------------------------
 export function CategoryIcon({ category, ...p }: P & { category: PartCategory }) {

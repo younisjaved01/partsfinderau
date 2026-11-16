@@ -204,6 +204,43 @@ export interface QuoteLine {
 }
 
 // ---------------------------------------------------------------------------
+// Community — rig builds (§ social layer)
+// ---------------------------------------------------------------------------
+
+/** Whether a mod is on the truck, planned, or on the wishlist. */
+export type ModStatus = 'fitted' | 'planned' | 'wishlist';
+
+export interface BuildMod {
+  id: ID;
+  /** Free-text group (catalogue category, or 'Protection', 'Recovery', …). */
+  category: string;
+  title: string;
+  note?: string;
+  /** Links to a catalogue part when a real one exists — otherwise text only. */
+  partId?: ID;
+  status: ModStatus;
+}
+
+export interface Build {
+  id: ID;
+  owner: string;
+  ownerHandle: string;
+  title: string;
+  tagline: string;
+  /** Links to a catalogue vehicle. */
+  vehicleId: ID;
+  region: string;
+  story: string;
+  /** Owner-described highlights (lift, tyres, …) — free text, not catalogue data. */
+  specs: { label: string; value: string }[];
+  mods: BuildMod[];
+  likes: number;
+  likedByMe?: boolean;
+  featured?: boolean;
+  createdAt: string;
+}
+
+// ---------------------------------------------------------------------------
 // Search intelligence
 // ---------------------------------------------------------------------------
 

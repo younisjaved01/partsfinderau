@@ -23,6 +23,7 @@ import {
   IconSales,
   IconChart,
   IconUser,
+  IconUsers,
 } from './icons';
 import { useAppStore } from '@/store/AppStore';
 import { isDemoMode } from '@/services/integrations';
@@ -70,6 +71,9 @@ export function Layout() {
     { to: '/sales', label: 'Sales', icon: IconSales },
     { to: '/customers', label: 'Customers', icon: IconUser },
     { to: '/reports', label: 'Reports', icon: IconChart },
+  ];
+  const community: NavEntry[] = [
+    { to: '/community', label: 'Rig Builds', icon: IconUsers },
   ];
   const secondary: NavEntry[] = [
     { to: '/classic', label: 'Classic Catalogue', icon: IconGrid },
@@ -169,6 +173,8 @@ export function Layout() {
           {sourcing.map(navItem)}
           {groupLabel('Business')}
           {business.map(navItem)}
+          {groupLabel('Community')}
+          {community.map(navItem)}
           {groupLabel('More')}
           {secondary.map(navItem)}
         </nav>

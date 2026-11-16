@@ -15,10 +15,14 @@ import type {
   Part,
   SearchResult,
   VehicleQuery,
+  Build,
+  BuildMod,
 } from '@/types';
 import { partById } from '@/data/parts';
 import { createRfq, simulateQuote, rollupStatus } from '@/services/rfq';
 import { bestPrice } from '@/services/inventory';
+import { shopItems } from '@/services/builds';
+import { seedBuilds } from '@/data/builds';
 import { supplierById } from '@/data/suppliers';
 
 /**
@@ -45,6 +49,8 @@ interface AppState {
   searchesToday: number;
   /** Vehicle context that persists across the Find Part → Catalogue workflow. */
   activeVehicle: VehicleQuery | null;
+  /** Community rig builds. */
+  builds: Build[];
 }
 
 type Action =
@@ -59,7 +65,9 @@ type Action =
   | { type: 'ADD_ORDER'; order: Order }
   | { type: 'ADD_HISTORY'; entry: SearchHistoryEntry }
   | { type: 'PUSH_ACTIVITY'; item: ActivityItem }
-  | { type: 'SET_ACTIVE_VEHICLE'; vehicle: VehicleQuery | null };
+  | { type: 'SET_ACTIVE_VEHICLE'; vehicle: VehicleQuery | null }
+  | { type: 'LIKE_BUILD'; buildId: string }
+  | { type: 'ADD_BUILD'; build: Build };
 
 const STORAGE_KEY = 'parts-iq-state-v2';
 
@@ -173,17 +181,32 @@ function seedState(): AppState {
     ],
     searchesToday: 7,
     activeVehicle: { make: 'Toyota', model: 'Hilux', year: 2021, engine: '2.8L Diesel' },
+    builds: freshBuilds(),
   };
 }
 
+/** Deep-ish copy of the seed builds so reducers never mutate the module data. */
+function freshBuilds(): Build[] {
+  return seedBuilds.map((b) => ({ ...b, specs: b.specs.map((s) => ({ ...s })), mods: b.mods.map((m) => ({ ...m })) }));
+}
+
 function loadState(): AppState {
+  const base = seedState();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as AppState;
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<AppState>;
+      // Merge so older persisted state (pre-builds) still gets the community seed.
+      return {
+        ...base,
+        ...parsed,
+        builds: parsed.builds && parsed.builds.length ? parsed.builds : base.builds,
+      };
+    }
   } catch {
     /* ignore */
   }
-  return seedState();
+  return base;
 }
 
 function reducer(state: AppState, action: Action): AppState {
@@ -263,6 +286,17 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, activity: [action.item, ...state.activity].slice(0, 30) };
     case 'SET_ACTIVE_VEHICLE':
       return { ...state, activeVehicle: action.vehicle };
+    case 'LIKE_BUILD':
+      return {
+        ...state,
+        builds: state.builds.map((b) =>
+          b.id === action.buildId
+            ? { ...b, likedByMe: !b.likedByMe, likes: b.likes + (b.likedByMe ? -1 : 1) }
+            : b,
+        ),
+      };
+    case 'ADD_BUILD':
+      return { ...state, builds: [action.build, ...state.builds] };
     default:
       return state;
   }
@@ -283,6 +317,19 @@ interface AppContextValue {
   buyNow: (part: Part, supplierId: string, quantity: number, unitPrice: number) => Order;
   activeVehicle: VehicleQuery | null;
   setActiveVehicle: (vehicle: VehicleQuery | null) => void;
+  likeBuild: (buildId: string) => void;
+  createBuild: (input: CreateBuildInput) => Build;
+  shopBuild: (build: Build) => number;
+}
+
+export interface CreateBuildInput {
+  title: string;
+  tagline: string;
+  vehicleId: string;
+  region: string;
+  story: string;
+  specs: { label: string; value: string }[];
+  mods: BuildMod[];
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -405,6 +452,39 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const likeBuild = useCallback((buildId: string) => dispatch({ type: 'LIKE_BUILD', buildId }), []);
+
+  const createBuild = useCallback((input: CreateBuildInput): Build => {
+    const build: Build = {
+      id: uid('build'),
+      owner: 'You',
+      ownerHandle: '@you',
+      title: input.title,
+      tagline: input.tagline,
+      vehicleId: input.vehicleId,
+      region: input.region,
+      story: input.story,
+      specs: input.specs,
+      mods: input.mods,
+      likes: 0,
+      likedByMe: false,
+      createdAt: new Date().toISOString(),
+    };
+    dispatch({ type: 'ADD_BUILD', build });
+    dispatch({ type: 'PUSH_ACTIVITY', item: activity('search', `Published build “${build.title}”`) });
+    return build;
+  }, []);
+
+  /** Add every catalogue-linked mod of a build to the quote basket. Returns count. */
+  const shopBuild = useCallback((build: Build): number => {
+    const items = shopItems(build);
+    items.forEach(({ part }) => dispatch({ type: 'ADD_TO_QUOTE', partId: part.id, quantity: 1 }));
+    if (items.length) {
+      dispatch({ type: 'PUSH_ACTIVITY', item: activity('quote', `Shopped build “${build.title}” — ${items.length} parts to quote`) });
+    }
+    return items.length;
+  }, []);
+
   const quoteCount = state.quote.reduce((n, l) => n + l.quantity, 0);
 
   const value = useMemo<AppContextValue>(
@@ -423,8 +503,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       buyNow,
       activeVehicle: state.activeVehicle,
       setActiveVehicle,
+      likeBuild,
+      createBuild,
+      shopBuild,
     }),
-    [state, addToQuote, removeFromQuote, setQuoteQty, clearQuote, quoteCount, sendRfq, respondRfq, awardRfq, cancelRfq, recordSearch, buyNow, setActiveVehicle],
+    [state, addToQuote, removeFromQuote, setQuoteQty, clearQuote, quoteCount, sendRfq, respondRfq, awardRfq, cancelRfq, recordSearch, buyNow, setActiveVehicle, likeBuild, createBuild, shopBuild],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

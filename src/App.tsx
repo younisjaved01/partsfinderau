@@ -9,6 +9,8 @@ import { Parts } from '@/pages/Parts';
 import { Vehicles } from '@/pages/Vehicles';
 import { Catalogue } from '@/pages/Catalogue';
 import { ClassicCatalogue } from '@/pages/ClassicCatalogue';
+import { Community } from '@/pages/Community';
+import { BuildDetail } from '@/pages/BuildDetail';
 import { Sales } from '@/pages/Sales';
 import { Reports } from '@/pages/Reports';
 import { Customers } from '@/pages/Customers';
@@ -32,6 +34,8 @@ export function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/vehicles" element={<Vehicles />} />
         <Route path="/catalogue" element={<Catalogue />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/community/:id" element={<BuildDetail />} />
         <Route path="/parts" element={<Parts />} />
         <Route path="/sales" element={<Sales />} />
         <Route path="/reports" element={<Reports />} />
